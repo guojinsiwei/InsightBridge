@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="知桥：轻量跨语种观点比对工具">
+  <title>知桥 InsightBridge · 跨语种观点比对</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="知桥首页">
+      <span class="brand-mark">知</span>
+      <span>知桥 <small>InsightBridge</small></span>
+    </a>
+    <nav aria-label="页面导航">
+      <a href="#workspace">开始比对</a>
+      <a href="#how-it-works">工作方式</a>
+      <span class="status"><i></i> 本地分析</span>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">CROSS-LANGUAGE PERSPECTIVE MAPPING</p>
+        <h1>让不同语言的观点，<br><em>在同一张地图上相遇。</em></h1>
+        <p class="lead">粘贴两段报道、评论或摘要，快速识别共同主题、立场倾向与关键分歧。数据只在你的浏览器中处理。</p>
+        <div class="hero-actions">
+          <a class="primary" href="#workspace">立即体验 <span>↘</span></a>
+          <button class="ghost" id="load-demo-top" type="button">载入演示文本</button>
+        </div>
+      </div>
+      <div class="hero-visual" aria-label="跨语种观点连接示意图">
+        <div class="orb orb-a">中<span>发展效率</span></div>
+        <div class="orb orb-b">EN<span>community trust</span></div>
+        <svg viewBox="0 0 520 360" role="img" aria-label="两组观点通过关键词相连">
+          <path d="M145 112 C250 28 350 70 400 177" />
+          <path d="M145 112 C238 180 302 242 400 177" />
+          <path d="M145 112 C222 112 309 127 400 177" />
+          <circle cx="260" cy="112" r="5" />
+          <circle cx="290" cy="186" r="5" />
+          <circle cx="337" cy="125" r="5" />
+        </svg>
+        <div class="floating-card"><b>72%</b><span>主题重合度</span></div>
+      </div>
+    </section>
+
+    <section class="workspace" id="workspace">
+      <div class="section-heading">
+        <div><span>01</span><h2>观点工作台</h2></div>
+        <p>支持中文与英文文本，建议每段 50–500 字。</p>
+      </div>
+
+      <div class="input-grid">
+        <article class="text-panel">
+          <div class="panel-head">
+            <label for="text-a">观点 A</label>
+            <select id="lang-a" aria-label="观点 A 语言">
+              <option value="zh">中文</option>
+              <option value="en">English</option>
+              <option value="auto">自动识别</option>
+            </select>
+          </div>
+          <textarea id="text-a" maxlength="2000" placeholder="粘贴第一段报道、评论或摘要……"></textarea>
+          <div class="counter"><span id="count-a">0</span> / 2000</div>
+        </article>
+
+        <div class="swap-wrap"><button id="swap" type="button" aria-label="交换两段观点">⇄</button></div>
+
+        <article class="text-panel">
+          <div class="panel-head">
+            <label for="text-b">观点 B</label>
+            <select id="lang-b" aria-label="观点 B 语言">
+              <option value="en">English</option>
+              <option value="zh">中文</option>
+              <option value="auto">自动识别</option>
+            </select>
+          </div>
+          <textarea id="text-b" maxlength="2000" placeholder="Paste a second article, opinion, or summary…"></textarea>
+          <div class="counter"><span id="count-b">0</span> / 2000</div>
+        </article>
+      </div>
+
+      <div class="run-row">
+        <button class="demo-btn" id="load-demo" type="button">使用示例</button>
+        <button class="analyze-btn" id="analyze" type="button"><span>生成观点地图</span><b>→</b></button>
+        <p id="privacy-note">无需上传 · 无需登录 · 浏览器本地完成</p>
+      </div>
+
+      <section class="results" id="results" aria-live="polite" hidden>
+        <div class="result-header">
+          <div><span class="result-kicker">ANALYSIS COMPLETE</span><h2>观点地图</h2></div>
+          <button id="reset" type="button">重新分析</button>
+        </div>
+
+        <div class="metrics">
+          <article class="metric metric-primary"><span>主题重合度</span><strong id="overlap-score">0%</strong><div class="bar"><i id="overlap-bar"></i></div><small id="overlap-label">等待分析</small></article>
+          <article class="metric"><span>观点 A 倾向</span><strong id="stance-a">中性</strong><small id="stance-a-note">—</small></article>
+          <article class="metric"><span>观点 B 倾向</span><strong id="stance-b">中性</strong><small id="stance-b-note">—</small></article>
+        </div>
+
+        <div class="map-grid">
+          <article class="result-card consensus">
+            <div class="card-title"><i>✓</i><div><span>CONSENSUS</span><h3>共同关注</h3></div></div>
+            <div class="tag-cloud" id="shared-tags"></div>
+            <p id="consensus-copy"></p>
+          </article>
+          <article class="result-card divergence">
+            <div class="card-title"><i>↗</i><div><span>DIVERGENCE</span><h3>差异焦点</h3></div></div>
+            <div class="split-view">
+              <div><b>A 更关注</b><div class="tag-cloud" id="only-a-tags"></div></div>
+              <div><b>B 更关注</b><div class="tag-cloud" id="only-b-tags"></div></div>
+            </div>
+          </article>
+        </div>
+
+        <article class="evidence-card">
+          <div class="card-title"><i>“</i><div><span>EVIDENCE</span><h3>代表性表达</h3></div></div>
+          <div class="quotes"><blockquote id="quote-a"></blockquote><blockquote id="quote-b"></blockquote></div>
+        </article>
+      </section>
+    </section>
+
+    <section class="how" id="how-it-works">
+      <div class="section-heading light"><div><span>02</span><h2>三步看清分歧</h2></div></div>
+      <div class="steps">
+        <article><b>01</b><h3>输入双语观点</h3><p>来自新闻、论文或社交媒体的两段文本均可。</p></article>
+        <article><b>02</b><h3>提取语义线索</h3><p>归一化关键词并计算主题重合与情绪倾向。</p></article>
+        <article><b>03</b><h3>生成观点地图</h3><p>把共识、差异与原文证据放在同一结果页。</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>知桥 InsightBridge</span><p>轻量跨语种观点比对 · 2026 软件工程实践周</p></footer>
+  <script src="app.js"></script>
+</body>
+</html>
