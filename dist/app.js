@@ -1,98 +1,214 @@
 const $ = (selector) => document.querySelector(selector);
+const { compareTexts, detectLang, bestSentence } = InsightBridgeAnalysis;
 
-const DEMO = {
-  a: "城市公共空间引入智能设施，能提高服务效率，也能帮助管理者更准确地理解居民需求。但技术应用必须保持透明，并为老年人和儿童保留简单、可靠的线下服务。真正的智慧城市应当让便利与公平同时增长。",
-  b: "Smart public infrastructure can make city services faster and more responsive. Yet efficiency alone is not enough: residents need transparency, privacy safeguards, and accessible offline options. A smart city succeeds when technology strengthens community trust instead of excluding vulnerable groups."
+const DEMOS = {
+  city: {
+    a: "城市公共空间引入智能设施，能提高服务效率，也能帮助管理者更准确地理解居民需求。但技术应用必须保持透明，并为老年人和儿童保留简单、可靠的线下服务。真正的智慧城市应当让便利与公平同时增长。",
+    b: "Smart public infrastructure can make city services faster and more responsive. Yet efficiency alone is not enough: residents need transparency, privacy safeguards, and accessible offline options. A smart city succeeds when technology strengthens community trust instead of excluding vulnerable groups.",
+    langA: "zh",
+    langB: "en"
+  },
+  research: {
+    a: "这篇摘要指出，跨语言文献综述应同时比较中英文研究的数据来源、模型假设与政策建议。共同主题往往集中在气候风险与能源转型，但中文文献更强调治理落地，英文文献更关注证据标准与可复现实验。",
+    b: "This abstract argues that multilingual literature reviews should compare data sources, model assumptions, and policy claims. Climate risk and energy transition appear in both corpora, while English papers stress evidence standards and reproducibility, and Chinese papers focus more on governance implementation.",
+    langA: "zh",
+    langB: "en"
+  },
+  trade: {
+    a: "湾区企业出海时，外贸单证、产品说明与售后内容需要本地化。跨文化风险不只来自语言差异，还来自对隐私、安全和客户信任的不同理解。多语言物料应保留核心卖点，同时避免直接照搬国内市场话术。",
+    b: "When Guangdong-Hong Kong-Macao Greater Bay Area firms go overseas, trade documents and product copy need localization. Cross-cultural risk is not only linguistic: privacy, safety, and customer trust are framed differently. Multilingual materials should keep the core offer without copying domestic market slogans.",
+    langA: "zh",
+    langB: "en"
+  }
 };
 
-const DICTIONARY = {
-  "城市":"city","公共":"public","空间":"space","智能":"smart","设施":"infrastructure","服务":"service","效率":"efficiency","居民":"residents","需求":"needs","透明":"transparency","老年人":"elderly","儿童":"children","线下":"offline","公平":"fairness","便利":"convenience","技术":"technology","社区":"community","信任":"trust","隐私":"privacy","安全":"safety","包容":"inclusion","弱势":"vulnerable","群体":"groups","发展":"development","创新":"innovation","风险":"risk"
-};
+const PRIVACY_NOTE = "无需上传 · 无需登录 · 浏览器本地完成";
+let lastAnalysisKey = null;
+let isAnalyzing = false;
 
-const STOP = new Set(["the","a","an","and","or","of","to","in","on","for","is","are","be","can","that","when","with","more","also","alone","not","enough","need","instead","it","this","as","by","from","at","we","they","their","our","its","让","的","了","和","与","也","能","更","在","为","应当","必须","真正","同时","但","并","或","对","把","是","有","中"]);
-const POSITIVE = ["提高","便利","公平","可靠","成功","信任","包容","创新","faster","responsive","success","trust","accessible","strengthens","fairness","reliable","benefit"];
-const CAUTION = ["风险","必须","隐私","弱势","排除","透明","risk","privacy","vulnerable","excluding","safeguard","yet","must"];
-
-function tokenize(text) {
-  const english = (text.toLowerCase().match(/[a-z][a-z-]{2,}/g) || []).filter(w => !STOP.has(w));
-  const chinese = Object.keys(DICTIONARY).filter(word => text.includes(word));
-  return [...new Set([...english, ...chinese.map(w => DICTIONARY[w])])];
-}
-
-function stance(text) {
-  const lower = text.toLowerCase();
-  const positive = POSITIVE.filter(w => lower.includes(w)).length;
-  const caution = CAUTION.filter(w => lower.includes(w)).length;
-  if (positive > caution + 1) return { label: "积极", note: "更强调机会与收益" };
-  if (caution > positive + 1) return { label: "审慎", note: "更强调边界与风险" };
-  return { label: "平衡", note: "机会与风险均有涉及" };
-}
-
-function sentence(text) {
-  const parts = text.split(/(?<=[。！？.!?])\s*/).filter(s => s.trim().length > 12);
-  return (parts.sort((a,b) => b.length - a.length)[0] || text).trim().slice(0, 160);
-}
-
-function setTags(target, words, fallback) {
-  const list = words.length ? words.slice(0, 6) : fallback;
-  target.innerHTML = list.map(word => `<span>${escapeHtml(word)}</span>`).join("");
+function resolveLang(selectId, text) {
+  const chosen = $(selectId).value;
+  return chosen === "auto" ? detectLang(text) : chosen;
 }
 
 function escapeHtml(value) {
-  return value.replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
+  return value.replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
 }
 
-function updateCount(side) { $(`#count-${side}`).textContent = $(`#text-${side}`).value.length; }
+function setTags(target, concepts, fallback) {
+  target.innerHTML = concepts.length
+    ? concepts.slice(0, 8).map(c => `<span>${escapeHtml(c.label)}</span>`).join("")
+    : `<span class="empty">${escapeHtml(fallback)}</span>`;
+}
+
+function updateCount(side) {
+  $(`#count-${side}`).textContent = $(`#text-${side}`).value.length;
+}
+
+function setActiveDemo(name) {
+  document.querySelectorAll(".chip").forEach(chip => {
+    const active = chip.dataset.demo === name;
+    chip.classList.toggle("active", active);
+    chip.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function invalidateResults(message = PRIVACY_NOTE) {
+  lastAnalysisKey = null;
+  $("#results").hidden = true;
+  $("#privacy-note").textContent = message;
+  $("#privacy-note").classList.remove("warn");
+  ["a", "b"].forEach(side => {
+    $(`#text-${side}`).removeAttribute("aria-invalid");
+    $(`#text-${side}`).parentElement.classList.remove("shake");
+  });
+}
+
+function inputChanged() {
+  invalidateResults("输入已更新，请重新生成观点地图 · 文本仍在本地");
+  setActiveDemo(null);
+}
+
+function setDemo(name) {
+  const demoName = Object.prototype.hasOwnProperty.call(DEMOS, name) ? name : "city";
+  const demo = DEMOS[demoName];
+  invalidateResults();
+  $("#text-a").value = demo.a;
+  $("#text-b").value = demo.b;
+  $("#lang-a").value = demo.langA;
+  $("#lang-b").value = demo.langB;
+  updateCount("a");
+  updateCount("b");
+  setActiveDemo(demoName);
+}
 
 function loadDemo() {
-  $("#text-a").value = DEMO.a;
-  $("#text-b").value = DEMO.b;
-  $("#lang-a").value = "zh";
-  $("#lang-b").value = "en";
-  updateCount("a"); updateCount("b");
+  setDemo("city");
   $("#workspace").scrollIntoView({ behavior: "smooth" });
 }
 
-function analyze() {
-  const a = $("#text-a").value.trim();
-  const b = $("#text-b").value.trim();
-  if (a.length < 20 || b.length < 20) {
-    ["#text-a", "#text-b"].forEach(id => { if ($(id).value.trim().length < 20) { $(id).parentElement.classList.add("shake"); setTimeout(() => $(id).parentElement.classList.remove("shake"), 350); }});
-    $("#privacy-note").textContent = "每段至少输入 20 个字符后再分析";
-    return;
-  }
-  const wordsA = tokenize(a), wordsB = tokenize(b);
-  const shared = wordsA.filter(word => wordsB.includes(word));
-  const onlyA = wordsA.filter(word => !wordsB.includes(word));
-  const onlyB = wordsB.filter(word => !wordsA.includes(word));
-  const union = new Set([...wordsA, ...wordsB]).size || 1;
-  const score = Math.max(18, Math.min(96, Math.round((shared.length / union) * 100 + 34)));
-  const toneA = stance(a), toneB = stance(b);
-  $("#overlap-score").textContent = `${score}%`;
-  $("#overlap-bar").style.width = `${score}%`;
-  $("#overlap-label").textContent = score > 70 ? "核心议题高度一致" : score > 45 ? "存在清晰共同议题" : "关注重点差异明显";
-  $("#stance-a").textContent = toneA.label; $("#stance-a-note").textContent = toneA.note;
-  $("#stance-b").textContent = toneB.label; $("#stance-b-note").textContent = toneB.note;
-  setTags($("#shared-tags"), shared, ["公共价值", "技术影响"]);
-  setTags($("#only-a-tags"), onlyA, ["本地语境"]);
-  setTags($("#only-b-tags"), onlyB, ["表达视角"]);
-  $("#consensus-copy").textContent = shared.length ? `两段观点都围绕“${shared.slice(0,3).join("、")}”展开，可把这些主题作为沟通的共同起点。` : "两段文本使用了不同表达方式，但都在讨论技术与人的关系。";
-  $("#quote-a").textContent = sentence(a);
-  $("#quote-b").textContent = sentence(b);
+function clearAll() {
+  $("#text-a").value = "";
+  $("#text-b").value = "";
+  updateCount("a");
+  updateCount("b");
+  invalidateResults();
+  setActiveDemo(null);
+}
+
+function renderResults(payload) {
+  const { a, b, langA, langB, shared, onlyA, onlyB, score, toneA, toneB, canCompare, union, coverageNote } = payload;
+  const scoreText = canCompare ? `${score}%` : "—";
+  $("#overlap-score").textContent = scoreText;
+  $("#overlap-badge").textContent = scoreText;
+  $("#overlap-bar").style.width = canCompare ? `${score}%` : "0%";
+  $("#overlap-bar").parentElement.hidden = !canCompare;
+  $("#overlap-label").textContent = canCompare
+    ? `${shared.length} / ${union} 个已识别概念重合 · ` +
+      (score > 55 ? "已识别概念重合较多" : score > 0 ? "部分已识别概念重合" : "已识别概念暂无重合")
+    : coverageNote;
+  $("#stance-a").textContent = toneA.label;
+  $("#stance-a-note").textContent = toneA.note;
+  $("#stance-b").textContent = toneB.label;
+  $("#stance-b-note").textContent = toneB.note;
+  $("#map-lang-a").textContent = langA === "zh" ? "观点 A · 中文" : "观点 A · English";
+  $("#map-lang-b").textContent = langB === "zh" ? "观点 B · 中文" : "观点 B · English";
+  setTags($("#shared-tags"), shared, "未匹配到共同概念标签");
+  // Missing vocabulary coverage is not evidence that the other text lacks a topic.
+  setTags($("#only-a-tags"), canCompare ? onlyA : [], canCompare ? "暂无独有标签" : "覆盖不足，暂无法比较差异");
+  setTags($("#only-b-tags"), canCompare ? onlyB : [], canCompare ? "暂无独有标签" : "覆盖不足，暂无法比较差异");
+  $("#bridge-dots").innerHTML = shared.slice(0, 4).map(c => `<span>${escapeHtml(c.label.split(" / ")[0])}</span>`).join("");
+  $("#consensus-copy").textContent = !canCompare ? coverageNote : shared.length
+    ? `两段文本都命中了 ${shared.slice(0, 3).map(c => c.label).join("、")}。共同标签不代表立场一致，可结合原文核对。`
+    : "在当前词表已识别的概念中，未找到共同标签。";
+  $("#quote-a").textContent = `A · ${bestSentence(a, payload.conceptsA) || "未匹配到可引用的概念句。"}`;
+  $("#quote-b").textContent = `B · ${bestSentence(b, payload.conceptsB) || "未匹配到可引用的概念句。"}`;
+  $("#trace-copy").textContent =
+    (canCompare ? `重合度按 Jaccard 计算：|A∩B| / |A∪B| = ${shared.length} / ${union}。` : coverageNote) +
+    `已识别概念：A=${payload.conceptsA.length}，B=${payload.conceptsB.length}。` +
+    `语言设置：A=${langA === "zh" ? "中文" : "英文"}，B=${langB === "zh" ? "中文" : "英文"}。` +
+    (canCompare ? coverageNote : "");
   $("#results").hidden = false;
   $("#privacy-note").textContent = "分析完成，文本未离开当前浏览器";
+  $("#privacy-note").classList.remove("warn");
   $("#results").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function analyze() {
+  if (isAnalyzing) return;
+  const a = $("#text-a").value.trim();
+  const b = $("#text-b").value.trim();
+  const invalidSides = ["a", "b"].filter(side => $(`#text-${side}`).value.trim().length < 20);
+  if (invalidSides.length) {
+    invalidateResults("每段至少输入 20 个字符后再分析");
+    invalidSides.forEach(side => {
+      const field = $(`#text-${side}`);
+      field.setAttribute("aria-invalid", "true");
+      field.parentElement.classList.add("shake");
+      setTimeout(() => field.parentElement.classList.remove("shake"), 350);
+    });
+    $("#privacy-note").classList.add("warn");
+    $(`#text-${invalidSides[0]}`).focus();
+    return;
+  }
+
+  const langA = resolveLang("#lang-a", a);
+  const langB = resolveLang("#lang-b", b);
+  const key = JSON.stringify([a, b, langA, langB]);
+  if (lastAnalysisKey === key && !$("#results").hidden) return;
+  const button = $("#analyze");
+  isAnalyzing = true;
+  button.disabled = true;
+  try {
+    invalidateResults();
+    renderResults({ ...compareTexts(a, b), langA, langB });
+    lastAnalysisKey = key;
+  } catch (error) {
+    invalidateResults("本次分析未完成，请重试");
+    $("#privacy-note").classList.add("warn");
+    console.error("观点分析失败", error);
+  } finally {
+    isAnalyzing = false;
+    button.disabled = false;
+  }
 }
 
 $("#load-demo").addEventListener("click", loadDemo);
 $("#load-demo-top").addEventListener("click", loadDemo);
 $("#analyze").addEventListener("click", analyze);
-$("#reset").addEventListener("click", () => $("#workspace").scrollIntoView({behavior:"smooth"}));
-$("#text-a").addEventListener("input", () => updateCount("a"));
-$("#text-b").addEventListener("input", () => updateCount("b"));
+$("#clear").addEventListener("click", clearAll);
+$("#reset").addEventListener("click", () => {
+  invalidateResults();
+  $("#workspace").scrollIntoView({ behavior: "smooth" });
+  $("#text-a").focus({ preventScroll: true });
+});
+["a", "b"].forEach(side => {
+  $(`#text-${side}`).addEventListener("input", () => {
+    updateCount(side);
+    inputChanged();
+  });
+  $(`#lang-${side}`).addEventListener("change", inputChanged);
+});
 $("#swap").addEventListener("click", () => {
-  const a = $("#text-a").value, la = $("#lang-a").value;
-  $("#text-a").value = $("#text-b").value; $("#lang-a").value = $("#lang-b").value;
-  $("#text-b").value = a; $("#lang-b").value = la;
-  updateCount("a"); updateCount("b");
+  const a = $("#text-a").value;
+  const la = $("#lang-a").value;
+  $("#text-a").value = $("#text-b").value;
+  $("#lang-a").value = $("#lang-b").value;
+  $("#text-b").value = a;
+  $("#lang-b").value = la;
+  updateCount("a");
+  updateCount("b");
+  inputChanged();
+});
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    setDemo(chip.dataset.demo);
+    $("#workspace").scrollIntoView({ behavior: "smooth" });
+  });
+});
+document.addEventListener("keydown", event => {
+  if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !event.isComposing) {
+    event.preventDefault();
+    if (!event.repeat) analyze();
+  }
 });

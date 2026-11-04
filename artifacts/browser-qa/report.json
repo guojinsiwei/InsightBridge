@@ -1,0 +1,218 @@
+{
+  "date": "2026-11-04",
+  "environment": "Real in-app browser, local HTTP",
+  "url": "http://127.0.0.1:8765/",
+  "checks": [
+    {
+      "name": "切换示例隐藏旧结果",
+      "passed": true
+    },
+    {
+      "name": "科研摘要重合度",
+      "passed": true
+    },
+    {
+      "name": "交换隐藏旧结果",
+      "passed": true
+    },
+    {
+      "name": "交换后的语言",
+      "passed": true
+    },
+    {
+      "name": "快捷键分析及交换得分对称",
+      "passed": true
+    },
+    {
+      "name": "移动端分析",
+      "passed": true
+    },
+    {
+      "name": "无概念匹配时不显示百分比",
+      "passed": true
+    },
+    {
+      "name": "无倾向匹配时不显示平衡",
+      "passed": true
+    },
+    {
+      "name": "编辑后隐藏旧结果",
+      "passed": true
+    },
+    {
+      "name": "英文否定倾向",
+      "passed": true
+    },
+    {
+      "name": "中文否定倾向",
+      "passed": true
+    },
+    {
+      "name": "语言变化隐藏旧结果",
+      "passed": true
+    },
+    {
+      "name": "分析后立即清空不恢复旧结果",
+      "passed": true
+    },
+    {
+      "name": "清空A输入",
+      "passed": true
+    },
+    {
+      "name": "清空B输入",
+      "passed": true
+    },
+    {
+      "name": "空输入校验",
+      "passed": true
+    },
+    {
+      "name": "空输入提示",
+      "passed": true
+    },
+    {
+      "name": "无效输入不显示结果",
+      "passed": true
+    },
+    {
+      "name": "湾区出海重合度",
+      "passed": true
+    },
+    {
+      "name": "有效输入解除错误标记",
+      "passed": true
+    },
+    {
+      "name": "回到输入隐藏结果",
+      "passed": true
+    },
+    {
+      "name": "320px无横向溢出",
+      "passed": true
+    },
+    {
+      "name": "计数不遮挡正文",
+      "passed": true
+    },
+    {
+      "name": "结果说明不被导航遮挡",
+      "passed": true
+    },
+    {
+      "name": "768px无横向溢出",
+      "passed": true
+    },
+    {
+      "name": "768px卡片文字无溢出",
+      "passed": true
+    },
+    {
+      "name": "1280px无横向溢出",
+      "passed": true
+    },
+    {
+      "name": "桌面标题保持两行",
+      "passed": true
+    },
+    {
+      "name": "跳转链接默认完全隐藏",
+      "passed": true
+    },
+    {
+      "name": "2000字输入计数",
+      "passed": true
+    },
+    {
+      "name": "2000字输入正常分析",
+      "passed": true
+    },
+    {
+      "name": "重复提交保持有效结果",
+      "passed": true
+    },
+    {
+      "name": "390px主按钮独占一行",
+      "passed": true
+    },
+    {
+      "name": "390px计数独立于输入区域",
+      "passed": true
+    },
+    {
+      "name": "390px无横向溢出",
+      "passed": true
+    },
+    {
+      "name": "最终桌面结果正确",
+      "passed": true
+    },
+    {
+      "name": "最终结果区可见",
+      "passed": true
+    },
+    {
+      "name": "恢复默认桌面视口",
+      "passed": true
+    },
+    {
+      "name": "浏览器控制台无错误或警告",
+      "passed": true
+    }
+  ],
+  "layouts": {
+    "desktop": {
+      "client": 1265,
+      "h1Height": 124.41072082519533,
+      "h1LineHeight": "62.208px",
+      "scroll": 1265,
+      "skipBottom": -8,
+      "width": 1280
+    },
+    "mobile": {
+      "buttonHeight": 56.57143020629883,
+      "buttonWidth": 343.4285888671875,
+      "client": 375,
+      "counterGap": -0.00000762939453125,
+      "rowWidth": 343.4285888671875,
+      "scroll": 375,
+      "width": 390
+    },
+    "narrow": {
+      "client": 305,
+      "counterGap": 0,
+      "headerBottom": 64,
+      "kickerTop": 132.6428680419922,
+      "resetHeight": 44.85714340209961,
+      "resetNowrap": "nowrap",
+      "scroll": 305,
+      "width": 320
+    },
+    "tablet": {
+      "client": 753,
+      "overflowingCards": 0,
+      "scroll": 753,
+      "width": 768
+    }
+  },
+  "finalState": {
+    "headerBottom": 76,
+    "resultKickerTop": 144.33929443359375,
+    "resultsVisible": true,
+    "score": "45%",
+    "viewport": 1280
+  },
+  "consoleMessages": [],
+  "automatedChecks": {
+    "smoke": 7,
+    "regression": 36
+  },
+  "limitations": [
+    "The browser URL policy blocks file://; direct-file launch was not tested."
+  ],
+  "screenshots": [
+    "desktop.jpg",
+    "mobile.jpg",
+    "results.jpg"
+  ]
+}

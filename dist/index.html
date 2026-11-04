@@ -3,12 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="知桥：轻量跨语种观点比对工具">
+  <meta name="description" content="知桥 InsightBridge：浏览器本地完成的跨语种观点比对工具。关键词归一化、主题重合度与可解释证据，无需登录或上传文本。">
   <title>知桥 InsightBridge · 跨语种观点比对</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%2314221f'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-size='34' fill='%23d9ff43' font-family='Georgia,serif'%3E知%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <a class="skip" href="#workspace">跳到工作台</a>
   <div class="noise" aria-hidden="true"></div>
+
   <header class="topbar">
     <a class="brand" href="#top" aria-label="知桥首页">
       <span class="brand-mark">知</span>
@@ -17,7 +20,8 @@
     <nav aria-label="页面导航">
       <a href="#workspace">开始比对</a>
       <a href="#how-it-works">工作方式</a>
-      <span class="status"><i></i> 本地分析</span>
+      <a href="#method">方法说明</a>
+      <span class="status"><i></i> 本地分析 · 不上传</span>
     </nav>
   </header>
 
@@ -26,16 +30,21 @@
       <div class="hero-copy">
         <p class="eyebrow">CROSS-LANGUAGE PERSPECTIVE MAPPING</p>
         <h1>让不同语言的观点，<br><em>在同一张地图上相遇。</em></h1>
-        <p class="lead">粘贴两段报道、评论或摘要，快速识别共同主题、立场倾向与关键分歧。数据只在你的浏览器中处理。</p>
+        <p class="lead">粘贴两段中文或英文报道、摘要或评论，本地提取共同主题、差异焦点与词汇倾向。分析可核对、可解释，文本不会离开浏览器。</p>
         <div class="hero-actions">
           <a class="primary" href="#workspace">立即体验 <span>↘</span></a>
           <button class="ghost" id="load-demo-top" type="button">载入演示文本</button>
         </div>
+        <ul class="hero-pills" aria-label="项目特点">
+          <li>跨语种观点比对</li>
+          <li>可解释分析</li>
+          <li>隐私友好</li>
+        </ul>
       </div>
       <div class="hero-visual" aria-label="跨语种观点连接示意图">
         <div class="orb orb-a">中<span>发展效率</span></div>
         <div class="orb orb-b">EN<span>community trust</span></div>
-        <svg viewBox="0 0 520 360" role="img" aria-label="两组观点通过关键词相连">
+        <svg viewBox="0 0 520 360" role="img" aria-hidden="true">
           <path d="M145 112 C250 28 350 70 400 177" />
           <path d="M145 112 C238 180 302 242 400 177" />
           <path d="M145 112 C222 112 309 127 400 177" />
@@ -43,97 +52,198 @@
           <circle cx="290" cy="186" r="5" />
           <circle cx="337" cy="125" r="5" />
         </svg>
-        <div class="floating-card"><b>72%</b><span>主题重合度</span></div>
+        <div class="floating-card"><b>72%</b><span>主题重合度示意</span></div>
       </div>
     </section>
 
     <section class="workspace" id="workspace">
       <div class="section-heading">
         <div><span>01</span><h2>观点工作台</h2></div>
-        <p>支持中文与英文文本，建议每段 50–500 字。</p>
+        <p>支持中文与英文，建议每段 50–800 字。分析在本地即时完成。</p>
+      </div>
+
+      <div class="demo-row" role="group" aria-label="示例文本">
+        <span>快速载入</span>
+        <button type="button" class="chip" data-demo="city" aria-pressed="false">智慧城市</button>
+        <button type="button" class="chip" data-demo="research" aria-pressed="false">科研摘要</button>
+        <button type="button" class="chip" data-demo="trade" aria-pressed="false">湾区出海</button>
       </div>
 
       <div class="input-grid">
-        <article class="text-panel">
+        <article class="text-panel" id="panel-a">
           <div class="panel-head">
             <label for="text-a">观点 A</label>
             <select id="lang-a" aria-label="观点 A 语言">
+              <option value="auto" selected>自动识别</option>
               <option value="zh">中文</option>
               <option value="en">English</option>
-              <option value="auto">自动识别</option>
             </select>
           </div>
-          <textarea id="text-a" maxlength="2000" placeholder="粘贴第一段报道、评论或摘要……"></textarea>
+          <textarea id="text-a" maxlength="2000" aria-describedby="privacy-note" placeholder="粘贴第一段报道、评论或摘要……"></textarea>
           <div class="counter"><span id="count-a">0</span> / 2000</div>
         </article>
 
-        <div class="swap-wrap"><button id="swap" type="button" aria-label="交换两段观点">⇄</button></div>
+        <div class="swap-wrap">
+          <button id="swap" type="button" aria-label="交换两段观点" title="交换观点">⇄</button>
+        </div>
 
-        <article class="text-panel">
+        <article class="text-panel" id="panel-b">
           <div class="panel-head">
             <label for="text-b">观点 B</label>
             <select id="lang-b" aria-label="观点 B 语言">
+              <option value="auto" selected>自动识别</option>
               <option value="en">English</option>
               <option value="zh">中文</option>
-              <option value="auto">自动识别</option>
             </select>
           </div>
-          <textarea id="text-b" maxlength="2000" placeholder="Paste a second article, opinion, or summary…"></textarea>
+          <textarea id="text-b" maxlength="2000" aria-describedby="privacy-note" placeholder="Paste a second article, opinion, or summary…"></textarea>
           <div class="counter"><span id="count-b">0</span> / 2000</div>
         </article>
       </div>
 
       <div class="run-row">
         <button class="demo-btn" id="load-demo" type="button">使用示例</button>
+        <button class="ghost" id="clear" type="button">清空</button>
         <button class="analyze-btn" id="analyze" type="button"><span>生成观点地图</span><b>→</b></button>
-        <p id="privacy-note">无需上传 · 无需登录 · 浏览器本地完成</p>
+        <p id="privacy-note" role="status" aria-live="polite">无需上传 · 无需登录 · 浏览器本地完成</p>
       </div>
 
       <section class="results" id="results" aria-live="polite" hidden>
         <div class="result-header">
-          <div><span class="result-kicker">ANALYSIS COMPLETE</span><h2>观点地图</h2></div>
-          <button id="reset" type="button">重新分析</button>
+          <div>
+            <span class="result-kicker">EXPLAINABLE COMPARISON</span>
+            <h2>观点地图</h2>
+          </div>
+          <button id="reset" type="button">回到输入</button>
+        </div>
+
+        <div class="live-map" id="live-map" aria-label="主题重合示意图">
+          <div class="map-side">
+            <div class="map-orb small">A</div>
+            <p id="map-lang-a">观点 A</p>
+          </div>
+          <div class="map-bridge">
+            <div class="bridge-line" aria-hidden="true"></div>
+            <div class="map-badge"><b id="overlap-badge">0%</b><span>主题重合度</span></div>
+            <div class="bridge-dots" id="bridge-dots"></div>
+          </div>
+          <div class="map-side">
+            <div class="map-orb small mint">B</div>
+            <p id="map-lang-b">观点 B</p>
+          </div>
         </div>
 
         <div class="metrics">
-          <article class="metric metric-primary"><span>主题重合度</span><strong id="overlap-score">0%</strong><div class="bar"><i id="overlap-bar"></i></div><small id="overlap-label">等待分析</small></article>
-          <article class="metric"><span>观点 A 倾向</span><strong id="stance-a">中性</strong><small id="stance-a-note">—</small></article>
-          <article class="metric"><span>观点 B 倾向</span><strong id="stance-b">中性</strong><small id="stance-b-note">—</small></article>
+          <article class="metric metric-primary">
+            <span>主题重合度</span>
+            <strong id="overlap-score">0%</strong>
+            <div class="bar"><i id="overlap-bar"></i></div>
+            <small id="overlap-label">等待分析</small>
+          </article>
+          <article class="metric">
+            <span>观点 A 词汇倾向</span>
+            <strong id="stance-a">—</strong>
+            <small id="stance-a-note">—</small>
+          </article>
+          <article class="metric">
+            <span>观点 B 词汇倾向</span>
+            <strong id="stance-b">—</strong>
+            <small id="stance-b-note">—</small>
+          </article>
         </div>
 
         <div class="map-grid">
           <article class="result-card consensus">
-            <div class="card-title"><i>✓</i><div><span>CONSENSUS</span><h3>共同关注</h3></div></div>
+            <div class="card-title">
+              <i>✓</i>
+              <div><span>CONSENSUS</span><h3>共同关注</h3></div>
+            </div>
             <div class="tag-cloud" id="shared-tags"></div>
             <p id="consensus-copy"></p>
           </article>
           <article class="result-card divergence">
-            <div class="card-title"><i>↗</i><div><span>DIVERGENCE</span><h3>差异焦点</h3></div></div>
+            <div class="card-title">
+              <i>↗</i>
+              <div><span>DIVERGENCE</span><h3>差异焦点</h3></div>
+            </div>
             <div class="split-view">
-              <div><b>A 更关注</b><div class="tag-cloud" id="only-a-tags"></div></div>
-              <div><b>B 更关注</b><div class="tag-cloud" id="only-b-tags"></div></div>
+              <div><b>仅 A 匹配到</b><div class="tag-cloud" id="only-a-tags"></div></div>
+              <div><b>仅 B 匹配到</b><div class="tag-cloud" id="only-b-tags"></div></div>
             </div>
           </article>
         </div>
 
         <article class="evidence-card">
-          <div class="card-title"><i>“</i><div><span>EVIDENCE</span><h3>代表性表达</h3></div></div>
-          <div class="quotes"><blockquote id="quote-a"></blockquote><blockquote id="quote-b"></blockquote></div>
+          <div class="card-title">
+            <i>“</i>
+            <div><span>EVIDENCE</span><h3>代表性表达</h3></div>
+          </div>
+          <div class="quotes">
+            <blockquote id="quote-a"></blockquote>
+            <blockquote id="quote-b"></blockquote>
+          </div>
+        </article>
+
+        <article class="method-card" id="analysis-trace">
+          <div class="card-title">
+            <i>i</i>
+            <div><span>TRACE</span><h3>本次依据</h3></div>
+          </div>
+          <p id="trace-copy"></p>
+          <p class="method-hint">词汇倾向来自预置词表，排除部分常见否定表达后按不同词条计数，不是立场推断。复杂否定、反讽与上下文仍需人工核对。</p>
         </article>
       </section>
     </section>
 
     <section class="how" id="how-it-works">
-      <div class="section-heading light"><div><span>02</span><h2>三步看清分歧</h2></div></div>
+      <div class="section-heading light">
+        <div><span>02</span><h2>三步看清分歧</h2></div>
+      </div>
       <div class="steps">
-        <article><b>01</b><h3>输入双语观点</h3><p>来自新闻、论文或社交媒体的两段文本均可。</p></article>
-        <article><b>02</b><h3>提取语义线索</h3><p>归一化关键词并计算主题重合与情绪倾向。</p></article>
-        <article><b>03</b><h3>生成观点地图</h3><p>把共识、差异与原文证据放在同一结果页。</p></article>
+        <article>
+          <b>01</b>
+          <h3>输入双语观点</h3>
+          <p>来自新闻、论文或社交媒体的两段中文或英文文本均可。</p>
+        </article>
+        <article>
+          <b>02</b>
+          <h3>归一化关键词</h3>
+          <p>把常见中英概念映射到同一标签，再计算集合重合度与词表倾向。</p>
+        </article>
+        <article>
+          <b>03</b>
+          <h3>生成观点地图</h3>
+          <p>共识、差异与原文证据放在同一页，方便当场核对。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="method" id="method">
+      <div class="section-heading">
+        <div><span>03</span><h2>方法边界</h2></div>
+      </div>
+      <div class="method-grid">
+        <article>
+          <h3>它做什么</h3>
+          <p>关键词提取、中英文概念映射、Jaccard 主题重合度，以及基于词汇表的积极 / 审慎倾向统计。</p>
+        </article>
+        <article>
+          <h3>它不做什么</h3>
+          <p>不调用大语言模型，不做深层语义理解，也不把文本上传到服务器。适合作为可解释的跨语种对照原型。</p>
+        </article>
+        <article>
+          <h3>为何这样设计</h3>
+          <p>现场演示可核对每条标签来自哪些词；隐私友好，评委可离线打开 <code>dist/index.html</code> 直接体验。</p>
+        </article>
       </div>
     </section>
   </main>
 
-  <footer><span>知桥 InsightBridge</span><p>轻量跨语种观点比对 · 2026 软件工程实践周</p></footer>
+  <footer>
+    <span>知桥 InsightBridge</span>
+    <p>轻量跨语种观点比对 · 2026 软件工程实践周 · 科研与知识挖掘</p>
+  </footer>
+  <script src="analysis.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
